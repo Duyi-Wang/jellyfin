@@ -281,7 +281,7 @@ namespace MediaBrowser.Providers.MediaInfo
             if (options.MetadataRefreshMode == MetadataRefreshMode.FullRefresh
                 || options.MetadataRefreshMode == MetadataRefreshMode.Default)
             {
-                if (_config.Configuration.DummyChapterDuration > 0 && chapters.Length == 0 && mediaStreams.Any(i => i.Type == MediaStreamType.Video))
+                if (_config.Configuration.DummyChapterDuration > 0 && chapters.Length <= 1 && mediaStreams.Any(i => i.Type == MediaStreamType.Video))
                 {
                     chapters = CreateDummyChapters(video);
                 }
@@ -657,6 +657,11 @@ namespace MediaBrowser.Providers.MediaInfo
             }
 
             int chapterCount = (int)(runtime / dummyChapterDuration);
+            if (chapterCount <= 1)
+            {
+                return [];
+            }
+
             var chapters = new ChapterInfo[chapterCount];
 
             long currentChapterTicks = 0;
