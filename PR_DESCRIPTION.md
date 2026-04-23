@@ -1,8 +1,11 @@
 **Changes**
-Fix dummy chapter handling for videos with a single chapter in `FFProbeVideoInfo.cs`:
+Fix dummy chapter generation for videos with a single chapter or short duration.
 
-1. Change the condition that triggers dummy chapter creation from `chapters.Length == 0` to `chapters.Length <= 1`, so that videos with only one chapter (spanning the entire duration) also attempt dummy chapter generation.
-2. Add an early return in `CreateDummyChapters` when the calculated `chapterCount <= 1`. Previously, if a video's runtime was only slightly longer than `DummyChapterDuration` (e.g. 11 min runtime with 10 min interval), integer division produced `chapterCount = 1`, resulting in a single dummy chapter. This single chapter then caused `GetAverageDurationBetweenChapters` to return 0, triggering the misleading log "average chapter duration 0 was lower than the minimum threshold" and skipping chapter image extraction entirely. By returning an empty array when `chapterCount <= 1`, we avoid generating a useless single-chapter result that breaks downstream processing.
+Two issues existed in `FFProbeVideoInfo.cs`:
+
+1. Videos with only one chapter (spanning the entire duration) never triggered dummy chapter generation, because the condition checked `chapters.Length == 0`. A single meaningless chapter is effectively the same as no chapter at all, so this is changed to `chapters.Length <= 1`.
+
+2. `CreateDummyChapters` returned an empty array when the video runtime was shorter than or equal to the configured `DummyChapterDuration`, meaning short videos could never get a dummy chapter. This is fixed by using `Math.Max(1, ...)` to ensure at least one chapter is always generated.
 
 **Issues**
 Fixes #14478
